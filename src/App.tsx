@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import logo from './logo.svg';
+import target from './target.svg';
 import './App.css';
 
 const watchOptions = {
@@ -7,6 +7,46 @@ const watchOptions = {
   timeout: Infinity,
   maximumAge: 0,
 }
+
+type dotCoord = {
+  top: number,
+  left: number,
+}
+
+// Lat, Lon
+/*
+[[37.78747696541701, -122.39122815663572, 1, 0, 0, 0],
+[0, 0, 0, 37.78747696541701, -122.39122815663572, 1],
+[37.794991015857136, -122.41484686605361, 1, 0, 0, 0],
+[0, 0, 0, 37.794991015857136, -122.41484686605361, 1],
+[37.77404788772288, -122.41438750839272 , 1, 0, 0, 0],
+[0, 0, 0, 37.77404788772288, -122.41438750839272 , 1]]
+*/
+
+// left, top
+/*
+[[496/6.16], [385/7.47], [29/6.16],  [203/7.47], [42/6.16], [723/7.47]]
+*/
+//let xformFactorsTmap = [-3.05782974e+01,  3.20008685e+03,  3.92898556e+05,
+//  -3.32442009e+03, -2.60698859e+01,  1.22482262e+05];
+
+
+// Lat, Lon
+/*
+[[36.26964351416783, -115.01410766343376, 1, 0, 0, 0],
+[0, 0, 0, 36.26964351416783, -115.01410766343376, 1],
+[36.274781658180686, -115.00648228859261, 1, 0, 0, 0],
+[0, 0, 0, 36.274781658180686, -115.00648228859261, 1],
+[36.27400384120922, -115.01212167525291 , 1, 0, 0, 0],
+[0, 0, 0, 36.27400384120922, -115.01212167525291 , 1]]
+*/
+
+// left, top
+/*
+[[431/10.8], [1280/13.5], [431/10.8],  [125/13.5], [103/10.8], [720/13.5]]
+*/
+let xformFactorsEDC = [-10049.343367  ,    6771.46691539, 1143340.23372572,
+   -6352.8128599 ,   -6939.18519377, -567595.12041725];
 
 interface InfoCompProps {
   lat: number,
@@ -21,42 +61,25 @@ interface MapCompProps {
   left: number,
 }
 
-class CoordConverter {
-  topLat: number;
-  bottomLat: number;
-  leftLon: number;
-  rightLon: number;
-  rot: number
-
-  constructor(topLat: number, bottomLat: number, leftLon: number, rightLong: number, rot: number){
-    this.topLat = topLat;
-    this.bottomLat = bottomLat;
-    this.leftLon = leftLon;
-    this.rightLon = rightLong;
-    this.rot = rot;
-  }
-
-  // Ignores rotation for now
-  mapCoords(loc: GeolocationPosition): [number, number]{
-    var top = (this.topLat - loc.coords.latitude) / (this.topLat - this.bottomLat);
-    var left = (this.leftLon - loc.coords.longitude) / (this.topLat - this.bottomLat);
-    return [Math.abs(top) * 100, Math.abs(left) * 100];
-  };
+function mapCoords(loc: GeolocationPosition,  affineXform: number[]): dotCoord {
+  let left = (affineXform[0] * loc.coords.latitude) + (affineXform[1] * loc.coords.longitude) + affineXform[2];
+  let top  = (affineXform[3] * loc.coords.latitude) + (affineXform[4] * loc.coords.longitude) + affineXform[5];
+  return {left: left, top: top}
 }
 
 function MapComp({top, left} : MapCompProps){
   
-  //let mapPath = "edclv_2024_de_festival_map_1080x1350_r04v02-2.png";
-  let mapPath = "t_third_map.png";
+  let mapPath = "edclv_2024_de_festival_map_1080x1350_r04v02-2.png";
+  //let mapPath = "t_third_map.png";
   let style = {
-    top: top + "%",
-    left: left + "%",
+    top: ((top % 100) + 100) % 100 + "%",
+    left: ((left % 100) + 100) % 100 + "%",
   }
 
   return (
     <div id="mapparent">
       <img id="mapimg" src={mapPath} alt="map"/>
-      <img id="mapico" src={logo} style={style} alt="location icon"/>
+      <img id="mapico" src={target} style={style} alt="location icon"/>
     </div>
   );
 }
@@ -83,41 +106,30 @@ function App() {
   const [acc, setAcc] = useState(NaN);
   const [ts, setTs] = useState(NaN);
 
-  const [top, setTop] = useState(NaN);
-  const [left, setLeft] = useState(NaN);
+  const [top, setTop] = useState(-1);
+  const [left, setLeft] = useState(-1);
 
-
-
-  let conv = new CoordConverter(
-    37.8033203442, 
-    37.7728736999,
-    -122.416327932, 
-    -122.385257791,
-    0
-  )
-
-  function latSetter() : PositionCallback {
+  function  getPosCallback() : PositionCallback {
     return (loc : GeolocationPosition) => {
-
       setLat(loc.coords.latitude);
       setLon(loc.coords.longitude);
       setAlt(loc.coords.altitude ? loc.coords.altitude : 0);
       setAcc(loc.coords.accuracy);
       setTs(loc.timestamp);
 
+      let coords = mapCoords(loc, xformFactorsEDC);
+      setTop(coords.top);
+      setLeft(coords.left);
 
-      var [t, l] = conv.mapCoords(loc);
-      setTop(t);
-      setLeft(l);
-
-      console.log("got coord: ", loc);      
+      console.log("got coord: ", loc);
+      console.log("div coords: ", coords);
     };
   }
 
   navigator.geolocation.watchPosition(
-     latSetter(), 
-     (err: GeolocationPositionError) => {console.log("got error: ", err)}, 
-     watchOptions,
+    getPosCallback(), 
+    (err: GeolocationPositionError) => {console.log("got error: ", err)}, 
+    watchOptions,
   )  
 
   return (
