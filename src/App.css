@@ -7,6 +7,23 @@
   pointer-events: none;
 }
 
+#mapparent {
+  position: relative;
+}
+
+#mapimg {
+  position: relative;
+  width: 100%;
+  height: auto;
+}
+
+#mapico {
+  position: absolute;
+  width: 32pt;
+  height: 32pt;
+  transform: translate(-50%, -50%)
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
