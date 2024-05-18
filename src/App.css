@@ -7,8 +7,15 @@
   pointer-events: none;
 }
 
+Body{
+  color: white;
+  background-color: black;
+  user-select: none;
+}
+
 #mapparent {
   position: relative;
+  user-select: none;
 }
 
 #mapimg {
@@ -23,35 +30,13 @@
   height: 32pt;
   transform: translate(-50%, -50%);
   animation: Target-pulse infinite 1s linear;
+  transition: all .5s ease-in-out;
+
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 

@@ -45,7 +45,7 @@ type dotCoord = {
 /*
 [[431/10.8], [1280/13.5], [431/10.8],  [125/13.5], [103/10.8], [720/13.5]]
 */
-let xformFactorsEDC = [-10049.343367  ,    6771.46691539, 1143340.23372572,
+let xformFactorsEDC = [-10049.343367, 6771.46691539, 1143340.23372572,
    -6352.8128599 ,   -6939.18519377, -567595.12041725];
 
 interface InfoCompProps {
@@ -54,6 +54,7 @@ interface InfoCompProps {
   alt: number,
   acc: number,
   ts: number,
+  alpha: number;
 }
 
 interface MapCompProps {
@@ -64,7 +65,9 @@ interface MapCompProps {
 function mapCoords(loc: GeolocationPosition,  affineXform: number[]): dotCoord {
   let left = (affineXform[0] * loc.coords.latitude) + (affineXform[1] * loc.coords.longitude) + affineXform[2];
   let top  = (affineXform[3] * loc.coords.latitude) + (affineXform[4] * loc.coords.longitude) + affineXform[5];
-  return {left: left, top: top}
+  left = ((left % 100) + 100) % 100;
+  top = ((top % 100) + 100) % 100;
+  return {left: left, top: top};
 }
 
 function MapComp({top, left} : MapCompProps){
@@ -72,8 +75,8 @@ function MapComp({top, left} : MapCompProps){
   let mapPath = "edclv_2024_de_festival_map_1080x1350_r04v02-2.png";
   //let mapPath = "t_third_map.png";
   let style = {
-    top: ((top % 100) + 100) % 100 + "%",
-    left: ((left % 100) + 100) % 100 + "%",
+    top: top + "%",
+    left: left + "%",
   }
 
   return (
@@ -84,15 +87,21 @@ function MapComp({top, left} : MapCompProps){
   );
 }
 
+function InfoComp({lat, lon, alt, acc, ts, alpha} : InfoCompProps){
 
-function InfoComp({lat, lon, alt, acc, ts} : InfoCompProps){
+  let timeString = "unknown"
+  if (ts) {
+    let updateTime = new Date(ts);
+    timeString = `${updateTime.getHours()}:${updateTime.getMinutes()}:${updateTime.getSeconds()}:${updateTime.getMilliseconds()}`;
+  }
   return (
     <div>
       lat: {lat ? lat : "???"} <br />
       lon: {lon ? lon : "???"} <br />
       alt: {alt ? alt : "???"} <br />
-      acc: {acc ? acc : "???"} <br />
-      ts: {ts ? ts : "???"} <br />
+      acc: {acc ? acc + "m" : "???"} <br />
+      last update: {timeString} <br />
+      device orientation: {alpha ?? "no orientation"} <br /> 
     </div>
   );
 }
@@ -106,8 +115,10 @@ function App() {
   const [acc, setAcc] = useState(NaN);
   const [ts, setTs] = useState(NaN);
 
-  const [top, setTop] = useState(-1);
-  const [left, setLeft] = useState(-1);
+  const [top, setTop] = useState(-100);
+  const [left, setLeft] = useState(-100);
+
+  const [alpha, setAlpha] = useState(NaN);
 
   function  getPosCallback() : PositionCallback {
     return (loc : GeolocationPosition) => {
@@ -120,6 +131,16 @@ function App() {
       let coords = mapCoords(loc, xformFactorsEDC);
       setTop(coords.top);
       setLeft(coords.left);
+
+      // compass???
+      // window.addEventListener("deviceorientationabsolute", (event) => {
+      //   const deviceOrientationEvent = event as DeviceOrientationEvent;
+      //   if (deviceOrientationEvent){ 
+      //     setAlpha(deviceOrientationEvent.alpha ?? NaN);
+      //   }
+      //   console.log(event);
+      // });
+
 
       console.log("got coord: ", loc);
       console.log("div coords: ", coords);
@@ -144,6 +165,7 @@ function App() {
       alt={alt}
       acc={acc}
       ts={ts}
+      alpha={alpha}
     />
   </div>
   );
