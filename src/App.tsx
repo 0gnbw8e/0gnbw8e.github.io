@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import target from './target.svg';
+import { useState } from 'react';
+import { Info } from './components/Info';
+import { Map } from './components/Map';
+
 import './App.css';
 
 const watchOptions = {
@@ -13,102 +15,34 @@ type dotCoord = {
   left: number,
 }
 
-// Lat, Lon
 /*
-[[37.78747696541701, -122.39122815663572, 1, 0, 0, 0],
-[0, 0, 0, 37.78747696541701, -122.39122815663572, 1],
-[37.794991015857136, -122.41484686605361, 1, 0, 0, 0],
-[0, 0, 0, 37.794991015857136, -122.41484686605361, 1],
-[37.77404788772288, -122.41438750839272 , 1, 0, 0, 0],
-[0, 0, 0, 37.77404788772288, -122.41438750839272 , 1]]
+MT = C -> (M^-1)MT = (M^-1)C = T
+
+M - Lat, Lon 
+[[36.2696808554979, -115.0141488360722, 1, 0, 0, 0],
+[0, 0, 0, 36.2696808554979, -115.0141488360722, 1],
+[36.274831370253004, -115.00652077545493, 1, 0, 0, 0],
+[0, 0, 0, 36.274831370253004, -115.00652077545493, 1],
+[36.273955822983254, -115.01196520107368 , 1, 0, 0, 0],
+[0, 0, 0, 36.273955822983254, -115.01196520107368 , 1]]
+
+C = left, top
+[[433/10.8], [1280/13.5], [433/10.8],  [143/13.5], [105/10.8], [693/13.5]]
 */
 
-// left, top
-/*
-[[496/6.16], [385/7.47], [29/6.16],  [203/7.47], [42/6.16], [723/7.47]]
-*/
+// T
+let xformFactorsEDC = [ -10844.37907787,    7322.193314  , 1235518.09244534,
+  -6917.08587195,   -6370.64541234, -481739.04779642];
 //let xformFactorsTmap = [-3.05782974e+01,  3.20008685e+03,  3.92898556e+05,
 //  -3.32442009e+03, -2.60698859e+01,  1.22482262e+05];
 
-
-// Lat, Lon
-/*
-[[36.26964351416783, -115.01410766343376, 1, 0, 0, 0],
-[0, 0, 0, 36.26964351416783, -115.01410766343376, 1],
-[36.274781658180686, -115.00648228859261, 1, 0, 0, 0],
-[0, 0, 0, 36.274781658180686, -115.00648228859261, 1],
-[36.27400384120922, -115.01212167525291 , 1, 0, 0, 0],
-[0, 0, 0, 36.27400384120922, -115.01212167525291 , 1]]
-*/
-
-// left, top
-/*
-[[431/10.8], [1280/13.5], [431/10.8],  [125/13.5], [103/10.8], [720/13.5]]
-*/
-let xformFactorsEDC = [-10049.343367, 6771.46691539, 1143340.23372572,
-   -6352.8128599 ,   -6939.18519377, -567595.12041725];
-
-interface InfoCompProps {
-  lat: number,
-  lon: number,
-  alt: number,
-  acc: number,
-  ts: number,
-  alpha: number;
-}
-
-interface MapCompProps {
-  top: number,
-  left: number,
-}
-
-function mapCoords(loc: GeolocationPosition,  affineXform: number[]): dotCoord {
-  let left = (affineXform[0] * loc.coords.latitude) + (affineXform[1] * loc.coords.longitude) + affineXform[2];
-  let top  = (affineXform[3] * loc.coords.latitude) + (affineXform[4] * loc.coords.longitude) + affineXform[5];
-  left = ((left % 100) + 100) % 100;
-  top = ((top % 100) + 100) % 100;
+function mapCoords(c: GeolocationCoordinates,  affineXform: number[]): dotCoord {
+  let left = (affineXform[0] * c.latitude) + (affineXform[1] * c.longitude) + affineXform[2];
+  let top  = (affineXform[3] * c.latitude) + (affineXform[4] * c.longitude) + affineXform[5];
   return {left: left, top: top};
 }
 
-function MapComp({top, left} : MapCompProps){
-  
-  let mapPath = "edclv_2024_de_festival_map_1080x1350_r04v02-2.png";
-  //let mapPath = "t_third_map.png";
-  let style = {
-    top: top + "%",
-    left: left + "%",
-  }
-
-  return (
-    <div id="mapparent">
-      <img id="mapimg" src={mapPath} alt="map"/>
-      <img id="mapico" src={target} style={style} alt="location icon"/>
-    </div>
-  );
-}
-
-function InfoComp({lat, lon, alt, acc, ts, alpha} : InfoCompProps){
-
-  let timeString = "unknown"
-  if (ts) {
-    let updateTime = new Date(ts);
-    timeString = `${updateTime.getHours()}:${updateTime.getMinutes()}:${updateTime.getSeconds()}:${updateTime.getMilliseconds()}`;
-  }
-  return (
-    <div>
-      lat: {lat ? lat : "???"} <br />
-      lon: {lon ? lon : "???"} <br />
-      alt: {alt ? alt : "???"} <br />
-      acc: {acc ? acc + "m" : "???"} <br />
-      last update: {timeString} <br />
-      device orientation: {alpha ?? "no orientation"} <br /> 
-    </div>
-  );
-}
-
-
 function App() {
-
   const [lat, setLat] = useState(NaN);
   const [lon, setLon] = useState(NaN);
   const [alt, setAlt] = useState(NaN);
@@ -118,19 +52,28 @@ function App() {
   const [top, setTop] = useState(-100);
   const [left, setLeft] = useState(-100);
 
-  const [alpha, setAlpha] = useState(NaN);
+  const [alpha,] = useState(NaN);
+  const [oob, setOob] = useState(true);
 
   function  getPosCallback() : PositionCallback {
-    return (loc : GeolocationPosition) => {
-      setLat(loc.coords.latitude);
-      setLon(loc.coords.longitude);
-      setAlt(loc.coords.altitude ? loc.coords.altitude : 0);
-      setAcc(loc.coords.accuracy);
-      setTs(loc.timestamp);
+    return ({coords, timestamp} : GeolocationPosition) => {
+      setLat(coords.latitude);
+      setLon(coords.longitude);
+      setAlt(coords.altitude ? coords.altitude : 0);
+      setAcc(coords.accuracy);
+      setTs(timestamp);
 
-      let coords = mapCoords(loc, xformFactorsEDC);
-      setTop(coords.top);
-      setLeft(coords.left);
+      let mCoords = mapCoords(coords, xformFactorsEDC);
+      
+      if (mCoords.top > 100 || mCoords.top < 0 || mCoords.left > 100 || mCoords.left < 0){
+        setOob(true);
+        setTop(0);
+        setLeft(0);
+      } else {
+        setOob(false);
+        setTop(mCoords.top);
+        setLeft(mCoords.left);
+      }
 
       // compass???
       // window.addEventListener("deviceorientationabsolute", (event) => {
@@ -141,9 +84,8 @@ function App() {
       //   console.log(event);
       // });
 
-
-      console.log("got coord: ", loc);
-      console.log("div coords: ", coords);
+      console.log("got coord: ", coords);
+      console.log("map div coords: ", mCoords);
     };
   }
 
@@ -151,20 +93,22 @@ function App() {
     getPosCallback(), 
     (err: GeolocationPositionError) => {console.log("got error: ", err)}, 
     watchOptions,
-  )  
+  )
 
   return (
   <div className="app">
-    <MapComp
+    <Map
       top={top}
       left={left}
+      oob={oob}
     />
-    <InfoComp
+    <Info
       lat={lat}
       lon={lon}
       alt={alt}
       acc={acc}
       ts={ts}
+      oob={oob}
       alpha={alpha}
     />
   </div>

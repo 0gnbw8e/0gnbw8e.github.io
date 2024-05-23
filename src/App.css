@@ -1,12 +1,3 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
 Body{
   color: white;
   background-color: black;
@@ -31,13 +22,6 @@ Body{
   transform: translate(-50%, -50%);
   animation: Target-pulse infinite 1s linear;
   transition: all .5s ease-in-out;
-
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
 }
 
 @keyframes Target-pulse {
