@@ -5,14 +5,14 @@ import { Map } from './components/Map';
 import './App.css';
 
 const watchOptions = {
-  enableHighAccuracy: true,
-  timeout: Infinity,
-  maximumAge: 0,
+    enableHighAccuracy: true,
+    timeout: Infinity,
+    maximumAge: 0,
 }
 
 type dotCoord = {
-  top: number,
-  left: number,
+    top: number,
+    left: number,
 }
 
 /*
@@ -31,88 +31,88 @@ C = left, top
 */
 
 // T
-let xformFactorsEDC = [ -10844.37907787,    7322.193314  , 1235518.09244534,
-  -6917.08587195,   -6370.64541234, -481739.04779642];
+let xformFactorsEDC = [-10844.37907787, 7322.193314, 1235518.09244534,
+-6917.08587195, -6370.64541234, -481739.04779642];
 //let xformFactorsTmap = [-3.05782974e+01,  3.20008685e+03,  3.92898556e+05,
 //  -3.32442009e+03, -2.60698859e+01,  1.22482262e+05];
 
-function mapCoords(c: GeolocationCoordinates,  affineXform: number[]): dotCoord {
-  let left = (affineXform[0] * c.latitude) + (affineXform[1] * c.longitude) + affineXform[2];
-  let top  = (affineXform[3] * c.latitude) + (affineXform[4] * c.longitude) + affineXform[5];
-  return {left: left, top: top};
+function mapCoords(c: GeolocationCoordinates, affineXform: number[]): dotCoord {
+    let left = (affineXform[0] * c.latitude) + (affineXform[1] * c.longitude) + affineXform[2];
+    let top = (affineXform[3] * c.latitude) + (affineXform[4] * c.longitude) + affineXform[5];
+    return { left: left, top: top };
 }
 
 function App() {
-  const [lat, setLat] = useState(NaN);
-  const [lon, setLon] = useState(NaN);
-  const [alt, setAlt] = useState(NaN);
-  const [acc, setAcc] = useState(NaN);
-  const [ts, setTs] = useState(NaN);
+    const [lat, setLat] = useState(NaN);
+    const [lon, setLon] = useState(NaN);
+    const [alt, setAlt] = useState(NaN);
+    const [acc, setAcc] = useState(NaN);
+    const [ts, setTs] = useState(NaN);
 
-  const [top, setTop] = useState(-100);
-  const [left, setLeft] = useState(-100);
+    const [top, setTop] = useState(-100);
+    const [left, setLeft] = useState(-100);
 
-  const [alpha,] = useState(NaN);
-  const [oob, setOob] = useState(true);
+    const [alpha,] = useState(NaN);
+    const [oob, setOob] = useState(true);
 
-  function  getPosCallback() : PositionCallback {
-    return ({coords, timestamp} : GeolocationPosition) => {
-      setLat(coords.latitude);
-      setLon(coords.longitude);
-      setAlt(coords.altitude ? coords.altitude : 0);
-      setAcc(coords.accuracy);
-      setTs(timestamp);
+    function getPosCallback(): PositionCallback {
+        return ({ coords, timestamp }: GeolocationPosition) => {
+            setLat(coords.latitude);
+            setLon(coords.longitude);
+            setAlt(coords.altitude ? coords.altitude : 0);
+            setAcc(coords.accuracy);
+            setTs(timestamp);
 
-      let mCoords = mapCoords(coords, xformFactorsEDC);
-      
-      if (mCoords.top > 100 || mCoords.top < 0 || mCoords.left > 100 || mCoords.left < 0){
-        setOob(true);
-        setTop(0);
-        setLeft(0);
-      } else {
-        setOob(false);
-        setTop(mCoords.top);
-        setLeft(mCoords.left);
-      }
+            let mCoords = mapCoords(coords, xformFactorsEDC);
 
-      // compass???
-      // window.addEventListener("deviceorientationabsolute", (event) => {
-      //   const deviceOrientationEvent = event as DeviceOrientationEvent;
-      //   if (deviceOrientationEvent){ 
-      //     setAlpha(deviceOrientationEvent.alpha ?? NaN);
-      //   }
-      //   console.log(event);
-      // });
+            if (mCoords.top > 100 || mCoords.top < 0 || mCoords.left > 100 || mCoords.left < 0) {
+                setOob(true);
+                setTop(0);
+                setLeft(0);
+            } else {
+                setOob(false);
+                setTop(mCoords.top);
+                setLeft(mCoords.left);
+            }
 
-      console.log("got coord: ", coords);
-      console.log("map div coords: ", mCoords);
-    };
-  }
+            // compass???
+            // window.addEventListener("deviceorientationabsolute", (event) => {
+            //   const deviceOrientationEvent = event as DeviceOrientationEvent;
+            //   if (deviceOrientationEvent){ 
+            //     setAlpha(deviceOrientationEvent.alpha ?? NaN);
+            //   }
+            //   console.log(event);
+            // });
 
-  navigator.geolocation.watchPosition(
-    getPosCallback(), 
-    (err: GeolocationPositionError) => {console.log("got error: ", err)}, 
-    watchOptions,
-  )
+            console.log("got coord: ", coords);
+            console.log("map div coords: ", mCoords);
+        };
+    }
 
-  return (
-  <div className="app">
-    <Map
-      top={top}
-      left={left}
-      oob={oob}
-    />
-    <Info
-      lat={lat}
-      lon={lon}
-      alt={alt}
-      acc={acc}
-      ts={ts}
-      oob={oob}
-      alpha={alpha}
-    />
-  </div>
-  );
+    navigator.geolocation.watchPosition(
+        getPosCallback(),
+        (err: GeolocationPositionError) => { console.log("got error: ", err) },
+        watchOptions,
+    )
+
+    return (
+        <div className="app">
+            <Map
+                top={top}
+                left={left}
+                oob={oob}
+            />
+            <Info
+                lat={lat}
+                lon={lon}
+                alt={alt}
+                acc={acc}
+                ts={ts}
+                oob={oob}
+                alpha={alpha}
+            />
+        </div>
+    );
 }
 
 export default App;
