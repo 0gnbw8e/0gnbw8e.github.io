@@ -1,32 +1,25 @@
-interface InfoProps {
-    lat: number,
-    lon: number,
-    alt: number,
-    acc: number,
-    ts: number,
-    oob: boolean,
-    alpha: number;
+export interface InfoProps {
+  coords: GeolocationCoordinates;
+  lastUpdatedAt: Date | null;
+
+  oob: boolean,
+  alpha: number;
 }
 
+const formatter = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'short',
+  timeStyle: 'full',
+});
 
-function Info({ lat, lon, alt, acc, ts, oob, alpha }: InfoProps) {
-
-    let timeString = "unknown"
-    if (ts) {
-        let updateTime = new Date(ts);
-        timeString = `${updateTime.getHours()}:${updateTime.getMinutes()}:${updateTime.getSeconds()}:${updateTime.getMilliseconds()}`;
-    }
-    return (
-        <div>
-            lat: {lat ? lat : "???"} <br />
-            lon: {lon ? lon : "???"} <br />
-            alt: {alt ? alt : "???"} <br />
-            acc: {acc ? acc + "m" : "???"} <br />
-            last update: {timeString} <br />
-            out of map bounds: {oob ? "yes :(" : "no :)"}  <br />
-        </div>
-    );
+export function Info({ coords, lastUpdatedAt, oob, alpha }: InfoProps) {
+  return (
+    <div>
+      lat: {coords.latitude ?? "???"} <br />
+      lon: {coords.longitude ?? "???"} <br />
+      alt: {coords.altitude ?? "???"} <br />
+      acc: {coords.accuracy ? `${coords.accuracy}m` : "???"} <br />
+      last update: {lastUpdatedAt ? formatter.format(lastUpdatedAt) : 'unknown'} <br />
+      out of map bounds: {oob ? "yes :(" : "no :)"}  <br />
+    </div>
+  );
 }
-
-
-export { Info }

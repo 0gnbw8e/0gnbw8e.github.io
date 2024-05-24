@@ -1,28 +1,27 @@
 import type * as CSS from 'csstype';
 import target from './target.svg';
+import { type DotCoord } from '../coordinate';
 
-interface MapProps {
-    top: number,
-    left: number,
-    oob: boolean,
+const MAP_PATH = "edclv_2024_de_festival_map_1080x1350_r04v02-2.png";
+
+export interface MapProps {
+  coords: DotCoord | null;
+  isOob: boolean,
 }
 
-function Map({ top, left, oob }: MapProps) {
+export function Map({ coords, isOob: oob }: MapProps) {
+  const style: CSS.Properties = {
+    visibility: oob ? "hidden" : "visible",
+    ...(!coords ? {} : {
+      top: coords.top + "%",
+      left: coords.left + "%",
+    })
+  }
 
-    let mapPath = "edclv_2024_de_festival_map_1080x1350_r04v02-2.png";
-    //let mapPath = "t_third_map.png";
-    let style: CSS.Properties = {
-        top: top + "%",
-        left: left + "%",
-        visibility: oob ? "hidden" : "visible",
-    }
-
-    return (
-        <div id="mapparent">
-            <img id="mapimg" src={mapPath} alt="map" />
-            <img id="mapico" src={target} style={style} alt="location icon" />
-        </div>
-    );
+  return (
+    <div id="mapparent">
+      <img id="mapimg" src={MAP_PATH} alt="map" />
+      <img id="mapico" src={target} style={style} alt="location icon" />
+    </div>
+  );
 }
-
-export { Map }
