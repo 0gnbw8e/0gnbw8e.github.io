@@ -1,8 +1,7 @@
 export interface InfoProps {
   coords: GeolocationCoordinates;
   lastUpdatedAt: Date | null;
-
-  oob: boolean,
+  isOob: boolean,
   alpha: number;
 }
 
@@ -11,7 +10,7 @@ const formatter = new Intl.DateTimeFormat('en-US', {
   timeStyle: 'full',
 });
 
-export function Info({ coords, lastUpdatedAt, oob, alpha }: InfoProps) {
+export default function Info({ coords, lastUpdatedAt, isOob: oob, alpha }: InfoProps) {
   return (
     <div>
       lat: {coords.latitude ?? "???"} <br />

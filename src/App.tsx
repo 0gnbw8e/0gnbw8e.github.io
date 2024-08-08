@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Info } from './components/Info';
-import { Map } from './components/Map';
+import Info from './components/Info';
+import Map from './components/Map';
 import { type DotCoord, geoCoordsToDotCoord, isOutOfBounds } from './coordinate';
 
 import './App.css';
@@ -59,7 +59,7 @@ export default function App() {
         coords && <Info
           coords={coords}
           lastUpdatedAt={lastUpdatedAt}
-          oob={isOob}
+          isOob={isOob}
           alpha={alpha}
         />
       }

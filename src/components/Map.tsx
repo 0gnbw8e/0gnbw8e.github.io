@@ -2,16 +2,16 @@ import type * as CSS from 'csstype';
 import target from './target.svg';
 import { type DotCoord } from '../coordinate';
 
-const MAP_PATH = "edclv_2024_de_festival_map_1080x1350_r04v02-2.png";
+const MAP_PATH = "map.webp";
 
 export interface MapProps {
   coords: DotCoord | null;
   isOob: boolean,
 }
 
-export function Map({ coords, isOob: oob }: MapProps) {
+export default function Map({ coords, isOob: oob }: MapProps) {
   const style: CSS.Properties = {
-    visibility: oob ? "hidden" : "visible",
+    display: oob ? "none" : "inline",
     ...(!coords ? {} : {
       top: coords.top + "%",
       left: coords.left + "%",
